@@ -709,6 +709,8 @@ static int nrf5_init(const struct device *dev)
 
 	nrf_802154_init();
 
+	nrf_802154_ack_timeout_set(2000);
+
 	nrf5_get_capabilities_at_boot();
 
 	nrf5_radio_cfg->irq_config_func(dev);
