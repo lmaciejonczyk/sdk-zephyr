@@ -577,13 +577,13 @@ static int nrf5_tx(const struct device *dev,
 
 	nrf5_tx_started(dev, pkt, frag);
 
-	LOG_DBG("Sending frame (ch:%d, txpower:%d)",
-		nrf_802154_channel_get(), nrf_802154_tx_power_get());
+	LOG_INF("Sending frame (ch:%d, txpower:%d)", nrf_802154_channel_get(),
+		nrf_802154_tx_power_get());
 
 	/* Wait for the callback from the radio driver. */
 	k_sem_take(&nrf5_radio->tx_wait, K_FOREVER);
 
-	LOG_DBG("Result: %d", nrf5_data.tx_result);
+	LOG_INF("Result: %d", nrf5_data.tx_result);
 
 #if NRF_802154_ENCRYPTION_ENABLED
 	/*
