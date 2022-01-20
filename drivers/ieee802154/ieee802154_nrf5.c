@@ -993,6 +993,7 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error, uint32_t id)
 
 	default:
 		reason = IEEE802154_RX_FAIL_OTHER;
+		LOG_INF("RX failed, error: %d", error);
 		break;
 	}
 
