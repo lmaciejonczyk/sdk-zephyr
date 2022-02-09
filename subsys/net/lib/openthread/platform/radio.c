@@ -321,6 +321,7 @@ void transmit_message(struct k_work *tx_job)
 		break;
 	default:
 		tx_result = OT_ERROR_CHANNEL_ACCESS_FAILURE;
+		LOG_ERR("radio tx error: %d", tx_err);
 		break;
 	}
 
