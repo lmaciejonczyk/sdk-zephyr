@@ -52,11 +52,11 @@
 	buttons {
 		compatible = "gpio-keys";
 		button0: button_0 {
-			gpios = <&gpio0 11 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			gpios = <&gpio1 7 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
 			label = "Push button switch 0";
 		};
 		button1: button_1 {
-			gpios = <&gpio0 12 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			gpios = <&gpio1 8 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
 			label = "Push button switch 1";
 		};
 		button2: button_2 {
@@ -148,8 +148,6 @@
 	rx-pin = <8>;
 	rx-pull-up;
 	rts-pin = <5>;
-	cts-pin = <7>;
-	cts-pull-up;
 };
 
 arduino_serial: &uart1 {
