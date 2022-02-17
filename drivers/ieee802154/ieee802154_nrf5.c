@@ -995,6 +995,8 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error, uint32_t id)
 		break;
 	}
 
+	LOG_INF("nrf_802154_rx_error_t = %d", error);
+
 	nrf5_data.last_frame_ack_fpb = false;
 	if (nrf5_data.event_handler) {
 		nrf5_data.event_handler(dev, IEEE802154_EVENT_RX_FAILED, (void *)&reason);
