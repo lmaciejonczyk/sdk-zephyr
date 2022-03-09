@@ -118,6 +118,9 @@ static struct nrf5_802154_data nrf5_data;
 #define IEEE802154_NRF5_VENDOR_OUI (uint32_t)0xF4CE36
 #endif
 
+uint64_t schedule_time;
+uint32_t schedule_duration;
+
 static void nrf5_get_eui64(uint8_t *mac)
 {
 	uint64_t factoryAddress;
@@ -196,7 +199,14 @@ static void nrf5_rx_thread(void *arg1, void *arg2, void *arg3)
 
 		__ASSERT_NO_MSG(pkt_len <= CONFIG_NET_BUF_DATA_SIZE);
 
-		LOG_DBG("Frame received");
+		LOG_WRN("Frame received, time: %llu", rx_frame->time);
+		LOG_WRN("Frame schedule_time, time: %llu", schedule_time);
+		LOG_WRN("Frame schedule_duration, time: %u", schedule_duration);
+		if (rx_frame->time < schedule_time) {
+			LOG_ERR("Frame rx before window start");
+		} else if (rx_frame->time > schedule_time + schedule_duration) {
+			LOG_ERR("Frame rx after window end");
+		}
 
 		/* Block the RX thread until net_pkt is available, so that we
 		 * don't drop already ACKed frame in case of temporary net_pkt
@@ -204,8 +214,8 @@ static void nrf5_rx_thread(void *arg1, void *arg2, void *arg3)
 		 * incoming frames until it runs out of internal buffers (and
 		 * thus stops acknowledging consecutive frames).
 		 */
-		pkt = net_pkt_rx_alloc_with_buffer(nrf5_radio->iface, pkt_len,
-						   AF_UNSPEC, 0, K_FOREVER);
+		pkt = net_pkt_rx_alloc_with_buffer(nrf5_radio->iface, pkt_len, AF_UNSPEC, 0,
+						   K_FOREVER);
 
 		if (net_pkt_write(pkt, rx_frame->psdu + 1, pkt_len)) {
 			goto drop;
@@ -652,7 +662,8 @@ static int nrf5_stop(const struct device *dev)
 #if defined(CONFIG_IEEE802154_CSL_ENDPOINT)
 	if (nrf_802154_sleep_if_idle() != NRF_802154_SLEEP_ERROR_NONE) {
 		if (nrf5_data.event_handler) {
-			nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
+			// nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
+			;
 		} else {
 			LOG_WRN("Transition to radio sleep cannot be handled.");
 		}
@@ -846,6 +857,15 @@ static void nrf5_receive_at(uint32_t start, uint32_t duration, uint8_t channel, 
 	 */
 	uint64_t rx_time = target_time_convert_to_64_bits(start);
 
+	// LOG_ERR("start: %" PRIu32, start);
+	// LOG_WRN("schedule at: %llu", rx_time);
+	// LOG_WRN("duration: %u", duration);
+
+	if (duration != PH_DURATION) {
+		schedule_duration = duration;
+		schedule_time = start;
+	}
+
 	nrf_802154_receive_at(rx_time, duration, channel, id);
 }
 
@@ -860,6 +880,8 @@ static void nrf5_config_csl_period(uint16_t period)
 	 * the proper CSL Phase in the transmitted CSL Information Elements.
 	 */
 	if (period > 0) {
+		// LOG_ERR("DRX_SLOT_PH: rx_time: %" PRIu32, nrf5_data.csl_rx_time);
+
 		nrf5_receive_at(nrf5_data.csl_rx_time, PH_DURATION, nrf_802154_channel_get(),
 				DRX_SLOT_PH);
 	}
@@ -867,10 +889,13 @@ static void nrf5_config_csl_period(uint16_t period)
 
 static void nrf5_schedule_rx(uint8_t channel, uint32_t start, uint32_t duration)
 {
+	// LOG_ERR("DRX_SLOT_RX: rx_time: %" PRIu32, start - DRX_ADJUST);
 	nrf5_receive_at(start - DRX_ADJUST, duration, channel, DRX_SLOT_RX);
 
 	/* The placeholder reception window is rescheduled for the next period */
 	nrf_802154_receive_at_cancel(DRX_SLOT_PH);
+
+	// LOG_ERR("DRX_SLOT_PH: rx_time: %" PRIu32, nrf5_data.csl_rx_time);
 	nrf5_receive_at(nrf5_data.csl_rx_time, PH_DURATION, channel, DRX_SLOT_PH);
 }
 #endif /* CONFIG_IEEE802154_CSL_ENDPOINT */
@@ -1038,8 +1063,10 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error, uint32_t id)
 #if defined(CONFIG_IEEE802154_CSL_ENDPOINT)
 	if ((id == DRX_SLOT_PH) || (id == DRX_SLOT_RX)) {
 		__ASSERT_NO_MSG(nrf5_data.event_handler);
-		nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
-		return;
+		// nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
+		if (error == NRF_802154_RX_ERROR_DELAYED_TIMEOUT) {
+			return;
+		}
 	}
 #else
 	ARG_UNUSED(id);
@@ -1065,6 +1092,8 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error, uint32_t id)
 		reason = IEEE802154_RX_FAIL_OTHER;
 		break;
 	}
+
+	LOG_ERR("nrf_802154_receive_failed, error: %d", error);
 
 	nrf5_data.last_frame_ack_fpb = false;
 	if (nrf5_data.event_handler) {

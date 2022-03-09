@@ -42,5 +42,8 @@ __weak void assert_post_action(const char *file, unsigned int line)
 	}
 #endif
 
+	// while (1) {
+	// 	;
+	// }
 	k_panic();
 }
