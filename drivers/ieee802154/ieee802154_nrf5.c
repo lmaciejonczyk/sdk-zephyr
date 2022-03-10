@@ -662,11 +662,11 @@ static int nrf5_start(const struct device *dev)
 static int nrf5_stop(const struct device *dev)
 {
 #if defined(CONFIG_IEEE802154_CSL_ENDPOINT)
-	if (nrf_802154_sleep_if_idle() != NRF_802154_SLEEP_ERROR_NONE) {
-		__ASSERT_NO_MSG(nrf5_data.event_handler);
-		// nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
-		return -EIO;
-	}
+	// if (nrf_802154_sleep_if_idle() != NRF_802154_SLEEP_ERROR_NONE) {
+	// 	__ASSERT_NO_MSG(nrf5_data.event_handler);
+	// 	// nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
+	// 	return -EIO;
+	// }
 #else
 	ARG_UNUSED(dev);
 
