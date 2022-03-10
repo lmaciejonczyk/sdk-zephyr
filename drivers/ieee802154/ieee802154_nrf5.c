@@ -1058,6 +1058,8 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error, uint32_t id)
 {
 	const struct device *dev = net_if_get_device(nrf5_data.iface);
 
+	LOG_ERR("nrf_802154_receive_failed, error: %d", error);
+
 #if defined(CONFIG_IEEE802154_CSL_ENDPOINT)
 	if ((id == DRX_SLOT_PH) || (id == DRX_SLOT_RX)) {
 		__ASSERT_NO_MSG(nrf5_data.event_handler);
@@ -1090,8 +1092,6 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error, uint32_t id)
 		reason = IEEE802154_RX_FAIL_OTHER;
 		break;
 	}
-
-	LOG_ERR("nrf_802154_receive_failed, error: %d", error);
 
 	nrf5_data.last_frame_ack_fpb = false;
 	if (nrf5_data.event_handler) {
