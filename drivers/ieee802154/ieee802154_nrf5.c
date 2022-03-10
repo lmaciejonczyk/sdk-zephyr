@@ -73,7 +73,7 @@ static struct nrf5_802154_data nrf5_data;
  * 800 us is required to match the CSL tranmission timing for unknown
  * reasons. This is a temporary workaround until the root cause is found.
  */
-#define DRX_ADJUST 800
+#define DRX_ADJUST 1000
 
 #if defined(CONFIG_IEEE802154_NRF5_UICR_EUI64_ENABLE)
 #if defined(CONFIG_SOC_NRF5340_CPUAPP)
