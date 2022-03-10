@@ -596,7 +596,7 @@ otError otPlatRadioSleep(otInstance *aInstance)
 	    sState == OT_RADIO_STATE_RECEIVE ||
 	    sState == OT_RADIO_STATE_TRANSMIT) {
 		error = OT_ERROR_NONE;
-		if (radio_api->stop(radio_dev)) {
+		if (!radio_api->stop(radio_dev)) {
 			sState = OT_RADIO_STATE_SLEEP;
 		}
 	}
