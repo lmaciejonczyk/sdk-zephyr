@@ -199,13 +199,15 @@ static void nrf5_rx_thread(void *arg1, void *arg2, void *arg3)
 
 		__ASSERT_NO_MSG(pkt_len <= CONFIG_NET_BUF_DATA_SIZE);
 
-		LOG_WRN("Frame received, time: %llu", rx_frame->time);
-		LOG_WRN("Frame schedule_time, time: %llu", schedule_time);
-		LOG_WRN("Frame schedule_duration, time: %u", schedule_duration);
-		if (rx_frame->time < schedule_time) {
-			LOG_ERR("Frame rx before window start");
-		} else if (rx_frame->time > schedule_time + schedule_duration) {
-			LOG_ERR("Frame rx after window end");
+		if (schedule_duration) {
+			LOG_WRN("Frame received, time: %llu", rx_frame->time);
+			LOG_WRN("Frame schedule_time, time: %llu", schedule_time);
+			LOG_WRN("Frame schedule_duration, time: %u", schedule_duration);
+			if (rx_frame->time < schedule_time) {
+				LOG_ERR("Frame rx before window start");
+			} else if (rx_frame->time > schedule_time + schedule_duration) {
+				LOG_ERR("Frame rx after window end");
+			}
 		}
 
 		/* Block the RX thread until net_pkt is available, so that we
