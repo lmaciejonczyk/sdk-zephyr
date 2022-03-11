@@ -662,11 +662,11 @@ static int nrf5_start(const struct device *dev)
 static int nrf5_stop(const struct device *dev)
 {
 #if defined(CONFIG_IEEE802154_CSL_ENDPOINT)
-	// if (nrf_802154_sleep_if_idle() != NRF_802154_SLEEP_ERROR_NONE) {
-	// 	__ASSERT_NO_MSG(nrf5_data.event_handler);
-	// 	// nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
-	// 	return -EIO;
-	// }
+	if (nrf_802154_sleep_if_idle() != NRF_802154_SLEEP_ERROR_NONE) {
+		__ASSERT_NO_MSG(nrf5_data.event_handler);
+		nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
+		return -EIO;
+	}
 #else
 	ARG_UNUSED(dev);
 
@@ -676,7 +676,7 @@ static int nrf5_stop(const struct device *dev)
 	}
 #endif
 
-	LOG_DBG("nRF5 802154 radio stopped");
+	LOG_WRN("nRF5 802154 radio went sleep");
 
 	return 0;
 }
@@ -1063,7 +1063,7 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error, uint32_t id)
 #if defined(CONFIG_IEEE802154_CSL_ENDPOINT)
 	if ((id == DRX_SLOT_PH) || (id == DRX_SLOT_RX)) {
 		__ASSERT_NO_MSG(nrf5_data.event_handler);
-		// nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
+		nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
 		if (error == NRF_802154_RX_ERROR_DELAYED_TIMEOUT) {
 			return;
 		}
