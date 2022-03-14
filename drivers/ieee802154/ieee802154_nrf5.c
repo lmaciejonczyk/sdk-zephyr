@@ -662,11 +662,11 @@ static int nrf5_start(const struct device *dev)
 static int nrf5_stop(const struct device *dev)
 {
 #if defined(CONFIG_IEEE802154_CSL_ENDPOINT)
-	// if (nrf_802154_sleep_if_idle() != NRF_802154_SLEEP_ERROR_NONE) {
-	// 	__ASSERT_NO_MSG(nrf5_data.event_handler);
-	// 	nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
-	// 	return -EIO;
-	// }
+	if (nrf_802154_sleep_if_idle() != NRF_802154_SLEEP_ERROR_NONE) {
+		__ASSERT_NO_MSG(nrf5_data.event_handler);
+		nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
+		return -EIO;
+	}
 #else
 	ARG_UNUSED(dev);
 
@@ -855,13 +855,14 @@ static void nrf5_receive_at(uint32_t start, uint32_t duration, uint8_t channel, 
 	 */
 	uint64_t rx_time = target_time_convert_to_64_bits(start);
 
-	// LOG_ERR("start: %" PRIu32, start);
-	// LOG_WRN("schedule at: %llu", rx_time);
-	// LOG_WRN("duration: %u", duration);
-
 	if (duration != PH_DURATION) {
+		uint64_t now = nrf_802154_time_get();
 		schedule_duration = duration;
 		schedule_time = start;
+
+		LOG_WRN("now:         %llu", now);
+		LOG_WRN("schedule at: %llu", rx_time);
+		LOG_WRN("duration: %u", duration);
 	}
 
 	nrf_802154_receive_at(rx_time, duration, channel, id);
