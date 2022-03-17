@@ -73,7 +73,7 @@ static struct nrf5_802154_data nrf5_data;
  * 800 us is required to match the CSL tranmission timing for unknown
  * reasons. This is a temporary workaround until the root cause is found.
  */
-#define DRX_ADJUST 1000
+#define DRX_ADJUST 800
 
 #if defined(CONFIG_IEEE802154_NRF5_UICR_EUI64_ENABLE)
 #if defined(CONFIG_SOC_NRF5340_CPUAPP)
@@ -662,11 +662,11 @@ static int nrf5_start(const struct device *dev)
 static int nrf5_stop(const struct device *dev)
 {
 #if defined(CONFIG_IEEE802154_CSL_ENDPOINT)
-	if (nrf_802154_sleep_if_idle() != NRF_802154_SLEEP_ERROR_NONE) {
-		__ASSERT_NO_MSG(nrf5_data.event_handler);
-		nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
-		return -EIO;
-	}
+	// if (nrf_802154_sleep_if_idle() != NRF_802154_SLEEP_ERROR_NONE) {
+	// 	__ASSERT_NO_MSG(nrf5_data.event_handler);
+	// 	nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
+	// 	return -EIO;
+	// }
 #else
 	ARG_UNUSED(dev);
 
@@ -675,8 +675,6 @@ static int nrf5_stop(const struct device *dev)
 		return -EIO;
 	}
 #endif
-
-	LOG_WRN("nRF5 802154 radio went sleep");
 
 	return 0;
 }
@@ -1059,7 +1057,7 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error, uint32_t id)
 {
 	const struct device *dev = net_if_get_device(nrf5_data.iface);
 
-	LOG_ERR("nrf_802154_receive_failed, error: %d", error);
+	LOG_ERR("Rx failed, err: %d, id %d", error, id);
 
 #if defined(CONFIG_IEEE802154_CSL_ENDPOINT)
 	if ((id == DRX_SLOT_PH) || (id == DRX_SLOT_RX)) {
