@@ -199,16 +199,16 @@ static void nrf5_rx_thread(void *arg1, void *arg2, void *arg3)
 
 		__ASSERT_NO_MSG(pkt_len <= CONFIG_NET_BUF_DATA_SIZE);
 
-		if (schedule_duration) {
-			LOG_WRN("Frame received, time: %llu", rx_frame->time);
-			LOG_WRN("Frame schedule_time, time: %llu", schedule_time);
-			LOG_WRN("Frame schedule_duration, time: %u", schedule_duration);
-			if (rx_frame->time < schedule_time) {
-				LOG_ERR("Frame rx before window start");
-			} else if (rx_frame->time > schedule_time + schedule_duration) {
-				LOG_ERR("Frame rx after window end");
-			}
-		}
+		// if (schedule_duration) {
+		// 	LOG_WRN("Frame received, time: %u", (uint32_t)rx_frame->time);
+		// 	LOG_WRN("Frame schedule_time, time: %u", (uint32_t)schedule_time);
+		// 	LOG_WRN("Frame schedule_duration, time: %u", schedule_duration);
+		// 	if (rx_frame->time < schedule_time) {
+		// 		LOG_ERR("Frame rx before window start");
+		// 	} else if (rx_frame->time > schedule_time + schedule_duration) {
+		// 		LOG_ERR("Frame rx after window end");
+		// 	}
+		// }
 
 		/* Block the RX thread until net_pkt is available, so that we
 		 * don't drop already ACKed frame in case of temporary net_pkt
@@ -662,11 +662,11 @@ static int nrf5_start(const struct device *dev)
 static int nrf5_stop(const struct device *dev)
 {
 #if defined(CONFIG_IEEE802154_CSL_ENDPOINT)
-	// if (nrf_802154_sleep_if_idle() != NRF_802154_SLEEP_ERROR_NONE) {
-	// 	__ASSERT_NO_MSG(nrf5_data.event_handler);
-	// 	nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
-	// 	return -EIO;
-	// }
+	if (nrf_802154_sleep_if_idle() != NRF_802154_SLEEP_ERROR_NONE) {
+		__ASSERT_NO_MSG(nrf5_data.event_handler);
+		nrf5_data.event_handler(dev, IEEE802154_EVENT_SLEEP, NULL);
+		return -EIO;
+	}
 #else
 	ARG_UNUSED(dev);
 
@@ -854,14 +854,16 @@ static void nrf5_receive_at(uint32_t start, uint32_t duration, uint8_t channel, 
 	uint64_t rx_time = target_time_convert_to_64_bits(start);
 
 	if (duration != PH_DURATION) {
-		uint64_t now = nrf_802154_time_get();
 		schedule_duration = duration;
 		schedule_time = start;
 
-		LOG_WRN("now:         %llu", now);
-		LOG_WRN("schedule at: %llu", rx_time);
-		LOG_WRN("duration: %u", duration);
+		// LOG_WRN("duration: %u", duration);
 	}
+
+	// uint64_t now = nrf_802154_time_get();
+
+	// LOG_WRN("now:         %u", (uint32_t)now);
+	// LOG_WRN("schedule at: %u", (uint32_t)start);
 
 	nrf_802154_receive_at(rx_time, duration, channel, id);
 }
@@ -879,13 +881,17 @@ static void nrf5_config_csl_period(uint16_t period)
 	if (period > 0) {
 		// LOG_ERR("DRX_SLOT_PH: rx_time: %" PRIu32, nrf5_data.csl_rx_time);
 
-		nrf5_receive_at(nrf5_data.csl_rx_time, PH_DURATION, nrf_802154_channel_get(),
-				DRX_SLOT_PH);
+		// nrf5_receive_at(nrf5_data.csl_rx_time, PH_DURATION, nrf_802154_channel_get(),
+		// 		DRX_SLOT_PH);
 	}
 }
 
 static void nrf5_schedule_rx(uint8_t channel, uint32_t start, uint32_t duration)
 {
+	// static uint8_t slot_id = DRX_SLOT_RX;
+
+	// slot_id = slot_id == DRX_SLOT_RX ? DRX_SLOT_PH : DRX_SLOT_RX;
+
 	// LOG_ERR("DRX_SLOT_RX: rx_time: %" PRIu32, start - DRX_ADJUST);
 	nrf5_receive_at(start - DRX_ADJUST, duration, channel, DRX_SLOT_RX);
 
@@ -1057,7 +1063,7 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error, uint32_t id)
 {
 	const struct device *dev = net_if_get_device(nrf5_data.iface);
 
-	LOG_ERR("Rx failed, err: %d, id %d", error, id);
+	// LOG_ERR("Rx failed, err: %d, id %d", error, id);
 
 #if defined(CONFIG_IEEE802154_CSL_ENDPOINT)
 	if ((id == DRX_SLOT_PH) || (id == DRX_SLOT_RX)) {
