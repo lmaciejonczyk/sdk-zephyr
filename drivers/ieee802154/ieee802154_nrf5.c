@@ -879,10 +879,10 @@ static void nrf5_config_csl_period(uint16_t period)
 	 * the proper CSL Phase in the transmitted CSL Information Elements.
 	 */
 	if (period > 0) {
-		// LOG_ERR("DRX_SLOT_PH: rx_time: %" PRIu32, nrf5_data.csl_rx_time);
+		LOG_ERR("DRX_SLOT_PH: rx_time: %" PRIu32, nrf5_data.csl_rx_time);
 
-		// nrf5_receive_at(nrf5_data.csl_rx_time, PH_DURATION, nrf_802154_channel_get(),
-		// 		DRX_SLOT_PH);
+		nrf5_receive_at(nrf5_data.csl_rx_time, PH_DURATION, nrf_802154_channel_get(),
+				DRX_SLOT_PH);
 	}
 }
 
@@ -893,13 +893,13 @@ static void nrf5_schedule_rx(uint8_t channel, uint32_t start, uint32_t duration)
 	// slot_id = slot_id == DRX_SLOT_RX ? DRX_SLOT_PH : DRX_SLOT_RX;
 
 	// LOG_ERR("DRX_SLOT_RX: rx_time: %" PRIu32, start - DRX_ADJUST);
-	nrf5_receive_at(start - DRX_ADJUST, duration, channel, DRX_SLOT_RX);
+	// nrf5_receive_at(start - DRX_ADJUST, duration, channel, DRX_SLOT_RX);
 
-	/* The placeholder reception window is rescheduled for the next period */
-	nrf_802154_receive_at_cancel(DRX_SLOT_PH);
+	// /* The placeholder reception window is rescheduled for the next period */
+	// nrf_802154_receive_at_cancel(DRX_SLOT_PH);
 
-	// LOG_ERR("DRX_SLOT_PH: rx_time: %" PRIu32, nrf5_data.csl_rx_time);
-	nrf5_receive_at(nrf5_data.csl_rx_time, PH_DURATION, channel, DRX_SLOT_PH);
+	// // LOG_ERR("DRX_SLOT_PH: rx_time: %" PRIu32, nrf5_data.csl_rx_time);
+	// nrf5_receive_at(nrf5_data.csl_rx_time, PH_DURATION, channel, DRX_SLOT_PH);
 }
 #endif /* CONFIG_IEEE802154_CSL_ENDPOINT */
 
