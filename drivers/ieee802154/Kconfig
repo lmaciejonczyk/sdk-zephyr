@@ -139,7 +139,7 @@ config IEEE802154_2015
 
 config IEEE802154_DELAY_TRX_ACC
 	int "Clock accuracy for delayed operations"
-	default 20
+	default CLOCK_CONTROL_NRF_ACCURACY
 	help
 	  Accuracy of the clock used for scheduling radio delayed operations (delayed transmission
 	  or delayed reception), in ppm.
