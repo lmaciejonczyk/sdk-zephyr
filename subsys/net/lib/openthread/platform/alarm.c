@@ -118,5 +118,5 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
 
 uint32_t otPlatAlarmMicroGetNow(void)
 {
-	return (uint32_t)k_ticks_to_us_floor64(k_uptime_ticks());
+	return (uint32_t)k_ticks_to_us_ceil64(k_uptime_ticks());
 }
