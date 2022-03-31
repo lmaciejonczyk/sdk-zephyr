@@ -856,14 +856,13 @@ static void nrf5_receive_at(uint32_t start, uint32_t duration, uint8_t channel, 
 	if (duration != PH_DURATION) {
 		schedule_duration = duration;
 		schedule_time = start;
-
-		// LOG_WRN("duration: %u", duration);
 	}
 
-	// uint64_t now = nrf_802154_time_get();
+	uint64_t now = nrf_802154_time_get();
 
-	// LOG_WRN("now:         %u", (uint32_t)now);
-	// LOG_WRN("schedule at: %u", (uint32_t)start);
+	LOG_WRN("now:         %u", (uint32_t)now);
+	LOG_WRN("schedule at: %u", (uint32_t)start);
+	LOG_WRN("duration: %u", duration);
 
 	nrf_802154_receive_at(rx_time, duration, channel, id);
 }
@@ -893,13 +892,14 @@ static void nrf5_schedule_rx(uint8_t channel, uint32_t start, uint32_t duration)
 	// slot_id = slot_id == DRX_SLOT_RX ? DRX_SLOT_PH : DRX_SLOT_RX;
 
 	// LOG_ERR("DRX_SLOT_RX: rx_time: %" PRIu32, start - DRX_ADJUST);
-	// nrf5_receive_at(start - DRX_ADJUST, duration, channel, DRX_SLOT_RX);
+	nrf5_receive_at(start - DRX_ADJUST, duration, channel, DRX_SLOT_RX);
+	// nrf5_receive_at(start, duration, channel, DRX_SLOT_RX);
 
-	// /* The placeholder reception window is rescheduled for the next period */
-	// nrf_802154_receive_at_cancel(DRX_SLOT_PH);
+	/* The placeholder reception window is rescheduled for the next period */
+	nrf_802154_receive_at_cancel(DRX_SLOT_PH);
 
-	// // LOG_ERR("DRX_SLOT_PH: rx_time: %" PRIu32, nrf5_data.csl_rx_time);
-	// nrf5_receive_at(nrf5_data.csl_rx_time, PH_DURATION, channel, DRX_SLOT_PH);
+	// LOG_ERR("DRX_SLOT_PH: rx_time: %" PRIu32, nrf5_data.csl_rx_time);
+	nrf5_receive_at(nrf5_data.csl_rx_time, PH_DURATION, channel, DRX_SLOT_PH);
 }
 #endif /* CONFIG_IEEE802154_CSL_ENDPOINT */
 
@@ -1063,7 +1063,7 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error, uint32_t id)
 {
 	const struct device *dev = net_if_get_device(nrf5_data.iface);
 
-	// LOG_ERR("Rx failed, err: %d, id %d", error, id);
+	LOG_ERR("Rx failed, err: %d, id %d", error, id);
 
 #if defined(CONFIG_IEEE802154_CSL_ENDPOINT)
 	if ((id == DRX_SLOT_PH) || (id == DRX_SLOT_RX)) {
