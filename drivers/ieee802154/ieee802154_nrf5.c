@@ -234,6 +234,8 @@ static void nrf5_rx_thread(void *arg1, void *arg2, void *arg3)
 				(rx_frame->time % USEC_PER_SEC) * NSEC_PER_USEC
 		};
 
+		LOG_ERR("rx: %llu", rx_frame->time);
+
 		net_pkt_set_timestamp(pkt, &timestamp);
 #endif
 
@@ -530,7 +532,7 @@ static bool nrf5_tx_at(struct net_pkt *pkt, uint8_t *payload, bool cca)
 					 tx_at,
 					 &metadata);
 	if (nrf5_data.event_handler) {
-		LOG_WRN("TX_STARTED event will be triggered without delay");
+		LOG_ERR("tx_at: %llu", tx_at);
 	}
 	return ret;
 }
