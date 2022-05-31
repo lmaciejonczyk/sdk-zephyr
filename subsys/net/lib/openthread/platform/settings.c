@@ -252,10 +252,7 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey,
 
 	LOG_DBG("%s Entry aKey %u", __func__, aKey);
 
-	(void)ot_setting_delete_subtree(aKey, -1);
-
-	ret = snprintk(path, sizeof(path), "%s/%x/%08x", OT_SETTINGS_ROOT_KEY,
-		       aKey, sys_rand32_get());
+	ret = snprintk(path, sizeof(path), "%s/%x", OT_SETTINGS_ROOT_KEY, aKey);
 	__ASSERT(ret < sizeof(path), "Setting path buffer too small.");
 
 	ret = settings_save_one(path, aValue, aValueLength);
