@@ -70,7 +70,7 @@ nrf_802154_ser_err_t nrf_802154_backend_init(void)
 }
 
 /* Send packet thread details */
-#define RING_BUFFER_LEN 16
+#define RING_BUFFER_LEN 20
 #define SEND_THREAD_STACK_SIZE 1024
 
 static K_SEM_DEFINE(send_sem, 0, RING_BUFFER_LEN);
@@ -91,11 +91,14 @@ static uint8_t get_rb_idx_plus_1(uint8_t i)
 	return (i + 1) % RING_BUFFER_LEN;
 }
 
+#define NRF_802154_SERIALIZATION_ERROR_RING_BUFFER (-10)
+#define NRF_802154_SERIALIZATION_ERROR_IPC_SERVICE (-11)
+
 static nrf_802154_ser_err_t spinel_packet_from_thread_send(const uint8_t *data, uint32_t len)
 {
 	if (get_rb_idx_plus_1(wr_idx) == rd_idx) {
 		LOG_ERR("No spinel buffer available to send a new packet");
-		return NRF_802154_SERIALIZATION_ERROR_BACKEND_FAILURE;
+		return NRF_802154_SERIALIZATION_ERROR_RING_BUFFER;
 	}
 
 	LOG_DBG("Scheduling %u bytes for send thread", len);
@@ -125,7 +128,7 @@ static void spinel_packet_send_thread_fn(void *arg1, void *arg2, void *arg3)
 
 		if (ret != expected_ret) {
 			nrf_802154_ser_err_data_t err = {
-				.reason = NRF_802154_SERIALIZATION_ERROR_BACKEND_FAILURE,
+				.reason = NRF_802154_SERIALIZATION_ERROR_IPC_SERVICE,
 			};
 
 			nrf_802154_serialization_error(&err);
@@ -146,6 +149,5 @@ nrf_802154_ser_err_t nrf_802154_spinel_encoded_packet_send(const void *p_data,
 	LOG_DBG("Sending %u bytes directly", data_len);
 	int ret = ipc_service_send(&ept, p_data, data_len);
 
-	return ((ret < 0) ? NRF_802154_SERIALIZATION_ERROR_BACKEND_FAILURE
-			  : (nrf_802154_ser_err_t) ret);
+	return ((ret < 0) ? NRF_802154_SERIALIZATION_ERROR_IPC_SERVICE : (nrf_802154_ser_err_t)ret);
 }
