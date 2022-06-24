@@ -31,7 +31,7 @@
 
 #include <pm_config.h>
 
-#if CONFIG_NCS_IS_VARIANT_IMAGE && defined(PM_S0_ID)
+#if CONFIG_NCS_IS_VARIANT_IMAGE && CONFIG_SECURE_BOOT
 /* We are linking against S1, create symbol containing the flash ID of S0.
  * This is used when writing code operating on the "other" slot.
  */
