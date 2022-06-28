@@ -7,26 +7,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr.h>
+#include <zephyr/zephyr.h>
 #include <string.h>
 #include <stdio.h>
 #include <errno.h>
-#include <sys/atomic.h>
-#include <sys/util.h>
-#include <sys/slist.h>
-#include <sys/byteorder.h>
-#include <debug/stack.h>
-#include <sys/__assert.h>
+#include <zephyr/sys/atomic.h>
+#include <zephyr/sys/util.h>
+#include <zephyr/sys/slist.h>
+#include <zephyr/sys/byteorder.h>
+#include <zephyr/debug/stack.h>
+#include <zephyr/sys/__assert.h>
 #include <soc.h>
 
-#include <settings/settings.h>
+#include <zephyr/settings/settings.h>
 
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/conn.h>
-#include <bluetooth/l2cap.h>
-#include <bluetooth/hci.h>
-#include <bluetooth/hci_vs.h>
-#include <drivers/bluetooth/hci_driver.h>
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/conn.h>
+#include <zephyr/bluetooth/l2cap.h>
+#include <zephyr/bluetooth/hci.h>
+#include <zephyr/bluetooth/hci_vs.h>
+#include <zephyr/drivers/bluetooth/hci_driver.h>
 
 #define BT_DBG_ENABLED IS_ENABLED(CONFIG_BT_DEBUG_HCI_CORE)
 #define LOG_MODULE_NAME bt_hci_core
@@ -76,16 +76,6 @@ static void init_work(struct k_work *work);
 
 struct bt_dev bt_dev = {
 	.init          = Z_WORK_INITIALIZER(init_work),
-	/* Give cmd_sem allowing to send first HCI_Reset cmd, the only
-	 * exception is if the controller requests to wait for an
-	 * initial Command Complete for NOP.
-	 */
-#if !defined(CONFIG_BT_WAIT_NOP)
-	.ncmd_sem      = Z_SEM_INITIALIZER(bt_dev.ncmd_sem, 1, 1),
-#else
-	.ncmd_sem      = Z_SEM_INITIALIZER(bt_dev.ncmd_sem, 0, 1),
-#endif
-	.cmd_tx_queue  = Z_FIFO_INITIALIZER(bt_dev.cmd_tx_queue),
 #if defined(CONFIG_BT_DEVICE_APPEARANCE_DYNAMIC)
 	.appearance = CONFIG_BT_DEVICE_APPEARANCE,
 #endif
@@ -2231,8 +2221,10 @@ static const struct event_handler meta_events[] = {
 #if defined(CONFIG_BT_ISO_UNICAST)
 	EVENT_HANDLER(BT_HCI_EVT_LE_CIS_ESTABLISHED, hci_le_cis_established,
 		      sizeof(struct bt_hci_evt_le_cis_established)),
+#if defined(CONFIG_BT_ISO_PERIPHERAL)
 	EVENT_HANDLER(BT_HCI_EVT_LE_CIS_REQ, hci_le_cis_req,
 		      sizeof(struct bt_hci_evt_le_cis_req)),
+#endif /* (CONFIG_BT_ISO_PERIPHERAL) */
 #endif /* (CONFIG_BT_ISO_UNICAST) */
 #if defined(CONFIG_BT_ISO_BROADCASTER)
 	EVENT_HANDLER(BT_HCI_EVT_LE_BIG_COMPLETE,
@@ -3658,6 +3650,16 @@ int bt_enable(bt_ready_cb_t cb)
 
 	ready_cb = cb;
 
+	/* Give cmd_sem allowing to send first HCI_Reset cmd, the only
+	 * exception is if the controller requests to wait for an
+	 * initial Command Complete for NOP.
+	 */
+	if (!IS_ENABLED(CONFIG_BT_WAIT_NOP)) {
+		k_sem_init(&bt_dev.ncmd_sem, 1, 1);
+	} else {
+		k_sem_init(&bt_dev.ncmd_sem, 0, 1);
+	}
+	k_fifo_init(&bt_dev.cmd_tx_queue);
 	/* TX thread */
 	k_thread_create(&tx_thread_data, tx_thread_stack,
 			K_KERNEL_STACK_SIZEOF(tx_thread_stack),
