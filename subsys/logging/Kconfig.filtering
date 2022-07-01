@@ -12,7 +12,7 @@ config LOG_RUNTIME_FILTERING
 
 config LOG_DEFAULT_LEVEL
 	int "Default log level"
-	default 3
+	default 1
 	range 0 4
 	help
 	  Sets log level for modules which don't specify it explicitly. When
