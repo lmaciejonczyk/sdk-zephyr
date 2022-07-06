@@ -644,9 +644,9 @@ static int nrf5_tx(const struct device *dev,
 	net_pkt_set_ieee802154_frame_secured(pkt, nrf5_radio->tx_frame_is_secured);
 	net_pkt_set_ieee802154_mac_hdr_rdy(pkt, nrf5_radio->tx_frame_mac_hdr_rdy);
 
-	if (nrf5_radio->tx_result != NRF_802154_TX_ERROR_NONE) {
-		LOG_ERR("tx_result: %d", nrf5_radio->tx_result);
-	}
+	// if (nrf5_radio->tx_result != NRF_802154_TX_ERROR_NONE) {
+	// 	LOG_ERR("tx_result: %d", nrf5_radio->tx_result);
+	// }
 
 	switch (nrf5_radio->tx_result) {
 	case NRF_802154_TX_ERROR_NONE:
