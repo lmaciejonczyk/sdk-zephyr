@@ -250,6 +250,13 @@ static inline void _ready_one_thread(_wait_q_t *wq)
 
 static inline void z_sched_lock(void)
 {
+	if (arch_is_in_isr()) {
+		__disable_irq();
+
+		while (1) {
+			__ASM("nop");
+		}
+	}
 	__ASSERT(!arch_is_in_isr(), "");
 	__ASSERT(_current->base.sched_locked != 1U, "");
 
