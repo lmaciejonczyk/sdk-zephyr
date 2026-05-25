@@ -11,6 +11,8 @@
 #ifndef ZEPHYR_INCLUDE_FATAL_H
 #define ZEPHYR_INCLUDE_FATAL_H
 
+#include <stdbool.h>
+
 #include <zephyr/arch/cpu.h>
 #include <zephyr/arch/exception.h>
 #include <zephyr/toolchain.h>
@@ -66,6 +68,24 @@ FUNC_NORETURN void k_fatal_halt(unsigned int reason);
  *            state when the error occurred. May in some cases be NULL.
  */
 void k_sys_fatal_error_handler(unsigned int reason, const struct arch_esf *esf);
+
+/**
+ * @brief Pre-coredump policy hook for fatal errors.
+ *
+ * This weak hook is called from @ref z_fatal_error before invoking
+ * `coredump()`. Returning `true` allows coredump generation, while
+ * returning `false` skips coredump generation for this fatal event.
+ *
+ * The default implementation returns `true`.
+ *
+ * @param reason The reason for the fatal error
+ * @param esf Exception context, with details and partial or full register
+ *            state when the error occurred. May in some cases be NULL.
+ *
+ * @retval true  Continue with coredump generation
+ * @retval false Skip coredump generation
+ */
+bool k_sys_fatal_error_pre_coredump(unsigned int reason, const struct arch_esf *esf);
 
 /**
  * @brief Called by architecture code upon a fatal error.
