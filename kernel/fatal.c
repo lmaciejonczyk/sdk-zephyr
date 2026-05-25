@@ -46,6 +46,15 @@ __weak void k_sys_fatal_error_handler(unsigned int reason,
 }
 /* LCOV_EXCL_STOP */
 
+__weak bool k_sys_fatal_error_pre_coredump(unsigned int reason,
+					   const struct arch_esf *esf)
+{
+	ARG_UNUSED(reason);
+	ARG_UNUSED(esf);
+
+	return true;
+}
+
 static const char *thread_name_get(struct k_thread *thread)
 {
 	const char *thread_name = (thread != NULL) ? k_thread_name_get(thread) : NULL;
@@ -114,7 +123,9 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 		LOG_ERR("Current thread: %p (%s)", thread, thread_name_get(thread));
 	}
 
-	coredump(reason, esf, thread);
+	if (k_sys_fatal_error_pre_coredump(reason, esf)) {
+		coredump(reason, esf, thread);
+	}
 
 	k_sys_fatal_error_handler(reason, esf);
 
